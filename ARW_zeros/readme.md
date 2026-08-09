@@ -2,9 +2,13 @@
 
 ### Automated CSV Data Cleaning & Validation Tool
 
-A desktop Python application designed to clean and standardize **ARW dealer acknowledgment CSV files** before they are reloaded or sent downstream.
+A desktop Python application designed to clean and standardize **ARW dealer acknowledgment CSV files** before they're reloaded or sent downstream.
 
 The application provides a simple graphical interface for selecting an input file, applying standardized data transformations, generating a cleaned output file, and reviewing processing activity through an integrated log.
+
+## 📸 Application Preview
+
+[![ARW File Processor](./ARW_File_Fixer_Thumbnail.png)](./ARW_File_Fixer_Thumbnail.png)
 
 ---
 
@@ -35,7 +39,9 @@ The goal of this project is to **standardize these transformations into a repeat
 5. View processing status and activity
 6. Open the output directory directly from the application
 
-## The application preserves the input records and column structure while modifying specific field values according to defined business rules.
+The application preserves the input records and column structure while modifying specific field values according to defined business rules.
+
+---
 
 # 🔄 How It Works
 
@@ -67,8 +73,8 @@ The goal of this project is to **standardize these transformations into a repeat
                  │
                  ▼
         ┌──────────────────┐
-        │ Refund Amount     │
-        │ Correction        │
+        │ Refund Amount    │
+        │ Correction       │
         └────────┬─────────┘
                  │
                  ▼
@@ -77,10 +83,8 @@ The goal of this project is to **standardize these transformations into a repeat
         └────────┬─────────┘
                  │
                  ▼
-            CLEAN FILE
+             CLEAN FILE
 ```
-
-The transformations are applied sequentially to every record.
 
 ---
 
@@ -109,8 +113,6 @@ Fields include:
 * `Change_Flag`
 * `Original_Contract_Number`
 
-This rule is driven by the centralized `ZERO_TO_EMPTY_FIELDS` configuration.
-
 ---
 
 ## 2. State Standardization
@@ -132,7 +134,7 @@ KY       → KY
 ohio     → OH
 ```
 
-The application uses a built-in lookup table containing the 50 states plus Washington, D.C.
+The application includes a built-in lookup table containing the 50 states plus Washington, D.C.
 
 ---
 
@@ -144,7 +146,7 @@ If `Contract_Price_Retail_Cost` evaluates numerically to zero, the application c
 1
 ```
 
-The implementation handles values such as `0` and `0.0`, while leaving non-numeric values unchanged.
+Values such as `0` and `0.0` are handled, while non-numeric values are left unchanged.
 
 ---
 
@@ -164,27 +166,30 @@ the application sets:
 Contract_Refund_Amount = 0
 ```
 
-## These transaction reason codes are maintained in the centralized `ZERO_REFUND_REASON_CODES` configuration.
+These transaction reason codes are maintained in the centralized `ZERO_REFUND_REASON_CODES` configuration.
 
-# 🖥️ Application Interface
+---
 
-The application uses **CustomTkinter** to provide a desktop interface.
+# 🖥️ Application Features
 
-The interface includes:
+The application includes:
 
 * 📁 Input file selection
 * 💾 Output file selection
-* ▶️ Process File button
-* 🧹 Clear All button
-* 📂 Processed File Location button
+* ▶️ Process File
+* 🧹 Clear All
+* 📂 Processed File Location
 * 📊 Processing status
 * 📝 Integrated activity log
+* ⚠️ Error handling
 
-## The default output filename is automatically generated from the input filename using the `_Fix` suffix.
+The default output filename is automatically generated from the input filename using the `_Fix` suffix.
+
+---
 
 # 🧱 Architecture
 
-The application is separated into several components:
+The application is separated into four primary components:
 
 | Component             | Responsibility                          |
 | --------------------- | --------------------------------------- |
@@ -205,8 +210,6 @@ This separation keeps file operations, transformation logic, workflow orchestrat
 * 📄 CSV
 * 📝 Python Logging
 * 📦 Python Standard Library
-
-The project requires `customtkinter`; `tkinter` is included with standard Python installations on Windows.
 
 ---
 
@@ -268,8 +271,6 @@ Use **Clear All** to reset the application and begin another processing run.
 
 # 📝 Logging & Error Handling
 
-The application includes both application-level and GUI logging.
-
 Each run records information such as:
 
 * Number of records read
@@ -285,21 +286,11 @@ arw_processor.log
 
 and are also displayed within the application's log panel.
 
-The application also includes validation and error handling for situations such as:
-
-* Missing input files
-* Missing output paths
-* Empty datasets
-* File read/write failures
-* Processing errors
-
 ---
 
 # 💼 Business Value
 
 This project demonstrates how a manual data-cleaning workflow can be converted into a **repeatable desktop automation tool**.
-
-Potential benefits include:
 
 ### ⚙️ Standardization
 
@@ -325,9 +316,7 @@ Processing activity and errors are captured through application logging.
 
 # 🧠 What This Project Demonstrates
 
-This project goes beyond basic Python scripting.
-
-It demonstrates experience with:
+This project demonstrates experience with:
 
 * Object-oriented Python
 * GUI application development
@@ -344,35 +333,35 @@ It demonstrates experience with:
 
 # 🔧 Customization
 
-Several business rules are intentionally centralized so they can be modified without changing the core processing workflow.
+Several business rules are centralized so they can be modified without changing the core processing workflow.
 
-For example:
+### Zero-to-empty fields
 
 ```python
 ZERO_TO_EMPTY_FIELDS
 ```
 
-controls which fields convert `"0"` to an empty value.
+Controls which fields convert `"0"` to an empty value.
+
+### Refund reason codes
 
 ```python
 ZERO_REFUND_REASON_CODES
 ```
 
-controls which transaction reasons force the refund amount to zero.
+Controls which transaction reasons force the refund amount to zero.
 
-The state conversion logic is maintained through:
+### State mappings
 
 ```python
 STATE_ABBREVIATIONS
 ```
 
-This makes the application easier to adapt as business requirements change.
+Contains the state-name-to-abbreviation mappings.
 
 ---
 
 # 🚧 Future Improvements
-
-Potential future enhancements include:
 
 * [ ] Add automated unit tests
 * [ ] Add CSV validation before processing
@@ -383,17 +372,7 @@ Potential future enhancements include:
 * [ ] Add batch processing for multiple CSV files
 * [ ] Package the application as a standalone Windows executable
 * [ ] Add automated test data
-* [ ] Add data-quality validation rules
-
----
-
-# 📸 Application Preview
-
-*Add a screenshot of the ARW File Processor GUI here.*
-
-```markdown
-![ARW File Processor](screenshots/arw-file-processor.png)
-```
+* [ ] Add additional data-quality validation rules
 
 ---
 
