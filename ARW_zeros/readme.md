@@ -1,67 +1,414 @@
-# ARW Zeros Fixer (`ARW_zeros_v9.2.py`)
+# 🛠️ ARW Zeros Fixer
 
-A desktop GUI tool (Tkinter + CustomTkinter) for cleaning up ARW dealer acknowledgment CSV files before they're reloaded or sent downstream. It fixes zero-value placeholders, standardizes state fields, and normalizes contract price/refund values.
+### Automated CSV Data Cleaning & Validation Tool
+
+A desktop Python application designed to clean and standardize **ARW dealer acknowledgment CSV files** before they are reloaded or sent downstream.
+
+The application provides a simple graphical interface for selecting an input file, applying standardized data transformations, generating a cleaned output file, and reviewing processing activity through an integrated log.
+
+---
+
+## 🎯 The Problem
+
+CSV files used in operational data workflows can contain inconsistent or placeholder values that create downstream processing issues.
+
+Examples include:
+
+* `"0"` appearing where an empty value is expected
+* State names appearing in different formats
+* Contract prices containing zero values that require correction
+* Refund amounts requiring specific values based on transaction reason
+* Manual file-cleaning steps that are repetitive and error-prone
+
+The goal of this project is to **standardize these transformations into a repeatable process** rather than relying on manual edits.
+
+---
+
+## 💡 The Solution
+
+**ARW Zeros Fixer** provides a desktop GUI that allows a user to:
+
+1. Select an input CSV file
+2. Automatically generate a default output filename
+3. Apply predefined data-cleaning rules
+4. Save the transformed data as a new CSV
+5. View processing status and activity
+6. Open the output directory directly from the application
+
+## The application preserves the input records and column structure while modifying specific field values according to defined business rules.
+
+# 🔄 How It Works
+
+```text
+              INPUT CSV
+                  │
+                  ▼
+        ┌──────────────────┐
+        │  Read CSV File   │
+        └────────┬─────────┘
+                 │
+                 ▼
+        ┌──────────────────┐
+        │ Zero → Empty     │
+        │ Conversion       │
+        └────────┬─────────┘
+                 │
+                 ▼
+        ┌──────────────────┐
+        │ State            │
+        │ Standardization  │
+        └────────┬─────────┘
+                 │
+                 ▼
+        ┌──────────────────┐
+        │ Contract Price   │
+        │ Correction       │
+        └────────┬─────────┘
+                 │
+                 ▼
+        ┌──────────────────┐
+        │ Refund Amount     │
+        │ Correction        │
+        └────────┬─────────┘
+                 │
+                 ▼
+        ┌──────────────────┐
+        │ Write Output CSV │
+        └────────┬─────────┘
+                 │
+                 ▼
+            CLEAN FILE
+```
+
+The transformations are applied sequentially to every record.
+
+---
+
+# 🧹 Data Transformations
+
+## 1. Zero-to-Empty Conversion
+
+Specific fields containing the literal string `"0"` are converted to empty strings.
+
+Fields include:
+
+* `Cancellation_Date`
+* `Cancel_Reason_Code`
+* `Business_Name`
+* `Customer_Address_2`
+* `Customer_Phone`
+* `Customer_Email`
+* `Sales_Ticket_Number`
+* `Manufacturer_Name`
+* `Model_Number`
+* `Model_Name`
+* `Serial_Number`
+* `Product_Condition`
+* `Contract_Note`
+* `Renewal_Contract_Number`
+* `Change_Flag`
+* `Original_Contract_Number`
+
+This rule is driven by the centralized `ZERO_TO_EMPTY_FIELDS` configuration.
+
+---
+
+## 2. State Standardization
+
+The application standardizes the `Customer_State` field.
+
+It handles:
+
+* Existing two-letter state abbreviations
+* Full state names
+* Mixed or lowercase values
+* Other values that need capitalization
+
+For example:
+
+```text
+kentucky → KY
+KY       → KY
+ohio     → OH
+```
+
+The application uses a built-in lookup table containing the 50 states plus Washington, D.C.
+
+---
+
+## 3. Contract Price Correction
+
+If `Contract_Price_Retail_Cost` evaluates numerically to zero, the application changes the value to:
+
+```text
+1
+```
+
+The implementation handles values such as `0` and `0.0`, while leaving non-numeric values unchanged.
+
+---
+
+## 4. Refund Amount Correction
+
+For records where `Transaction_Reason` is:
+
+```text
+1
+2
+5
+```
+
+the application sets:
+
+```text
+Contract_Refund_Amount = 0
+```
+
+## These transaction reason codes are maintained in the centralized `ZERO_REFUND_REASON_CODES` configuration.
+
+# 🖥️ Application Interface
+
+The application uses **CustomTkinter** to provide a desktop interface.
+
+The interface includes:
+
+* 📁 Input file selection
+* 💾 Output file selection
+* ▶️ Process File button
+* 🧹 Clear All button
+* 📂 Processed File Location button
+* 📊 Processing status
+* 📝 Integrated activity log
+
+## The default output filename is automatically generated from the input filename using the `_Fix` suffix.
+
+# 🧱 Architecture
+
+The application is separated into several components:
+
+| Component             | Responsibility                          |
+| --------------------- | --------------------------------------- |
+| `FileHandler`         | Reads and writes CSV files              |
+| `RecordProcessor`     | Applies individual data transformations |
+| `ARWFileProcessor`    | Coordinates the processing workflow     |
+| `ARWFileProcessorGUI` | Provides the desktop user interface     |
+
+This separation keeps file operations, transformation logic, workflow orchestration, and UI functionality distinct.
+
+---
+
+# 🧰 Technologies
+
+* 🐍 Python
+* 🖥️ Tkinter
+* 🎨 CustomTkinter
+* 📄 CSV
+* 📝 Python Logging
+* 📦 Python Standard Library
+
+The project requires `customtkinter`; `tkinter` is included with standard Python installations on Windows.
+
+---
+
+# 🚀 Getting Started
 
 ## Requirements
 
-```
+Python 3.x and CustomTkinter.
+
+Install the required package:
+
+```bash
 pip install customtkinter
 ```
-(`tkinter` ships with standard Python on Windows.)
 
-## Running
+## Run the Application
 
-```
+```bash
 python ARW_zeros_v9.2.py
 ```
 
-This opens a GUI window titled **"ARW File Processor"**.
+This launches the **ARW File Processor** desktop application.
 
-## Usage
+---
 
-1. **Input File** — click **Browse** and select the source CSV. The output path is auto-filled as `{input_name}_Fix.csv` in the same folder (editable via **Output File** → **Browse**).
-2. Click **Process File** to run the transformations (see below) and write the output CSV.
-3. Click **Processed File Location** to open the output folder in File Explorer.
-4. Click **Clear All** to reset the form and start over.
-5. Status and a running log of actions/errors are shown at the bottom of the window.
+# 📋 Usage
 
-## What It Does
+### Step 1 — Select the Input
 
-For every record in the input CSV, four transformations are applied in order:
+Click **Browse** and select the source CSV file.
 
-1. **Zero-to-empty conversion** — if any of the following fields equal the literal string `"0"`, they're cleared to an empty string:
-   `Cancellation_Date`, `Cancel_Reason_Code`, `Business_Name`, `Customer_Address_2`, `Customer_Phone`, `Customer_Email`, `Sales_Ticket_Number`, `Manufacturer_Name`, `Model_Number`, `Model_Name`, `Serial_Number`, `Product_Condition`, `Contract_Note`, `Renewal_Contract_Number`, `Change_Flag`, `Original_Contract_Number`
+The application automatically creates a default output path using:
 
-2. **State standardization** (`Customer_State`) —
-   - Already a 2-letter uppercase abbreviation → left as-is.
-   - A full state name (e.g. `"kentucky"`) → converted to its 2-letter abbreviation (`"KY"`) via a built-in state name lookup table (all 50 states + DC).
-   - Anything else → uppercased as-is.
+```text
+{input_name}_Fix.csv
+```
 
-3. **Contract price fix** (`Contract_Price_Retail_Cost`) — if the value is numerically `0` (or `0.0`, etc.), it's changed to `"1"`. Non-numeric values are left unchanged.
+### Step 2 — Process the File
 
-4. **Refund amount fix** (`Contract_Refund_Amount`) — if `Transaction_Reason` is `"1"`, `"2"`, or `"5"` (Sales/Payments), `Contract_Refund_Amount` is forced to `"0"`.
+Click **Process File**.
 
-## Input/Output Notes
+The application:
 
-- Input CSV is read with `utf-8-sig` encoding (handles BOM from Excel exports).
-- Output CSV is written with `utf-8` encoding, same column order as the input.
-- All records are processed in memory; no rows are dropped or added — only field values are modified.
+```text
+Read → Transform → Write
+```
 
-## Logging
+the records.
 
-Every run appends to `arw_processor.log` (INFO level) in the working directory, and mirrors log messages to the console and the in-app log panel. Includes record counts read/processed/written and any errors encountered.
+### Step 3 — Review the Output
 
-## Code Structure
+Once processing completes, the application displays the number of records processed and provides access to the output location.
 
-| Class | Responsibility |
-|---|---|
-| `FileHandler` | Static CSV read/write helpers |
-| `RecordProcessor` | Static per-record transformation methods (the 4 fixes above) |
-| `ARWFileProcessor` | Orchestrates read → process → write over the full record set |
-| `ARWFileProcessorGUI` | CustomTkinter UI wiring (file pickers, buttons, status/log) |
+### Step 4 — Reset
 
-## Customizing
+Use **Clear All** to reset the application and begin another processing run.
 
-- To change which fields get zero-cleared, edit `ZERO_TO_EMPTY_FIELDS`.
-- To change which transaction reason codes force a zero refund, edit `ZERO_REFUND_REASON_CODES`.
-- State abbreviation mappings live in `STATE_ABBREVIATIONS`.
+---
+
+# 📝 Logging & Error Handling
+
+The application includes both application-level and GUI logging.
+
+Each run records information such as:
+
+* Number of records read
+* Number of records processed
+* Output location
+* Processing errors
+
+Logs are written to:
+
+```text
+arw_processor.log
+```
+
+and are also displayed within the application's log panel.
+
+The application also includes validation and error handling for situations such as:
+
+* Missing input files
+* Missing output paths
+* Empty datasets
+* File read/write failures
+* Processing errors
+
+---
+
+# 💼 Business Value
+
+This project demonstrates how a manual data-cleaning workflow can be converted into a **repeatable desktop automation tool**.
+
+Potential benefits include:
+
+### ⚙️ Standardization
+
+Business rules are implemented consistently rather than manually applied to individual files.
+
+### 🔁 Repeatability
+
+The same transformations can be applied to each file processed through the application.
+
+### 🧹 Data Quality
+
+Common formatting and placeholder-value issues are addressed before downstream use.
+
+### 🖥️ Accessibility
+
+A GUI allows users who aren't comfortable running Python scripts from the command line to operate the process.
+
+### 🔍 Traceability
+
+Processing activity and errors are captured through application logging.
+
+---
+
+# 🧠 What This Project Demonstrates
+
+This project goes beyond basic Python scripting.
+
+It demonstrates experience with:
+
+* Object-oriented Python
+* GUI application development
+* CSV data processing
+* Data transformation
+* Business-rule implementation
+* Error handling
+* Logging
+* File-system operations
+* Configuration-driven processing
+* Workflow automation
+
+---
+
+# 🔧 Customization
+
+Several business rules are intentionally centralized so they can be modified without changing the core processing workflow.
+
+For example:
+
+```python
+ZERO_TO_EMPTY_FIELDS
+```
+
+controls which fields convert `"0"` to an empty value.
+
+```python
+ZERO_REFUND_REASON_CODES
+```
+
+controls which transaction reasons force the refund amount to zero.
+
+The state conversion logic is maintained through:
+
+```python
+STATE_ABBREVIATIONS
+```
+
+This makes the application easier to adapt as business requirements change.
+
+---
+
+# 🚧 Future Improvements
+
+Potential future enhancements include:
+
+* [ ] Add automated unit tests
+* [ ] Add CSV validation before processing
+* [ ] Add a processing summary report
+* [ ] Add before/after record statistics
+* [ ] Add configurable business rules through the GUI
+* [ ] Add drag-and-drop file support
+* [ ] Add batch processing for multiple CSV files
+* [ ] Package the application as a standalone Windows executable
+* [ ] Add automated test data
+* [ ] Add data-quality validation rules
+
+---
+
+# 📸 Application Preview
+
+*Add a screenshot of the ARW File Processor GUI here.*
+
+```markdown
+![ARW File Processor](screenshots/arw-file-processor.png)
+```
+
+---
+
+# 👨🏾‍💻 Author
+
+**Antonio Nunnally**
+
+Data & Business Analyst
+
+**Focus Areas**
+
+`Python` • `Data Analytics` • `Automation` • `AI` • `Business Intelligence`
+
+---
+
+> **Build systems that eliminate repetitive work.**
+>
+> The goal isn't simply to write code. It's to use technology to make business processes more consistent, efficient, and scalable.
